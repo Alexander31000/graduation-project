@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Оформление аренды</title>
+    <link rel="stylesheet" href="{% static 'css/rent_form.css' %}">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Оформление аренды книги</h2>
+        <form method="post" id="rent-form">
+            {% csrf_token %}
+
+            <!-- Поле клиента -->
+            <div class="form-group">
+                {{ form.client.label }} {{ form.client }}
+            </div>
+
+            <!-- Выбор книг -->
+            <div class="form-group">
+                <label>Выберите доступные книги:</label>
+                <div class="books-selection">
+                    {{ form.books }}
+                </div>
+            </div>
+
+            <!-- Дата возврата -->
+            <div class="form-group">
+                <label for="{{ form.planned_return_date.id_for_label }}">Дата планируемого возврата:</label>
+                {{ form.planned_return_date }}
+            </div>
+
+            <!-- Инфо-панель -->
+            <div class="price-summary">
+                <p>Выбрано книг: <span id="selected-count">0</span></p>
+                <p>Итоговая стоимость: <strong><span id="total-price">0</span> руб.</strong></p>
+            </div>
+
+            <button type="submit" class="btn-submit">Оформить аренду</button>
+        </form>
+    </div>
+
+    <script src="{% static 'js/rent_form.js' %}"></script>
+</body>
+</html>

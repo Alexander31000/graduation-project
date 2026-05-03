@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование: {{ book.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/redactor_book.css' %}">
+</head>
+<body>
+    <div class="container">
+        <form method="POST" enctype="multipart/form-data" class="book-form">
+            {% csrf_token %}
+            <h1>Редактирование книги</h1>
+
+            <section class="main-info">
+                <h3>Основные данные</h3>
+                <div class="input-grid">
+                    <div class="field">
+                        <label>Название</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="field">
+                        <label>Автор</label>
+                        {{ form.author }}
+                    </div>
+                    <div class="field">
+                        <label>Цена (в день)</label>
+                        {{ form.daily_price }}
+                    </div>
+                    <div class="field">
+                        <label>Статус</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="field">
+                        <label>Жанр</label>
+                        {{ form.genres }}
+                    </div>
+                </div>
+
+                <div class="field full-width">
+                    <label>Описание</label>
+                    {{ form.description }}
+                </div>
+            </section>
+
+            <section class="additional-images">
+
+                <h3>Обложка</h3>
+                <div class="book-grid" id="bookGrid">
+                <div class="book-card">
+                    <article>
+                        <h3 class="book-title">{{ book.title }}</h3>
+                        <img src="{{book.img.url}}" alt="{{ book.title }}" class="book-cover">
+                        <a href="{% url 'book_detail' book.id %}">Подробнее</a>
+                    </article>
+                </div>
+                </div>
+
+
+                <h4>Дополнительные изображения:</h4>
+                {{ form_set.management_form }}
+
+
+                {% for form_img in form_set %}
+                    <div>
+                        {{ form_img.id }}
+                        {{ form_img.img }}
+                        {{ form_img.DELETE }} Удалить
+                    </div>
+                {% endfor %}
+                <div class="images-gallery">
+                    {% for img in additional_imgs %}
+                        <div>
+                            <img src="{{ img.addit_imgs.url }}" style="width:200px;">
+                            {% empty %}
+                            <p>Дополнительных фото нет.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+
+
+
+            <div class="form-actions">
+                <button type="submit" class="save-btn">Сохранить</button>
+                <a href="{% url 'main_page' %}" class="btn btn-secondary" style="display: inline-block; color: red;">Отмена</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="{% static 'js/redactor_book.js' %}"></script>
+</body>
+</html>

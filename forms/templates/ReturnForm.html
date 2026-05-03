@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Возврат книг</title>
+    <link rel="stylesheet" href="{% static 'css/return_form.css' %}">
+</head>
+<body>
+
+<h2>Возврат книг</h2>
+
+{% if error %}
+  <p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <label>Вернуть в библиотеку:</label>
+    {{ form.rental }}
+
+    <label>Рейтинг:</label>
+    <input type="number" name="rating_{{ book.id }}" min="1" max="5">
+
+    <button type="submit">Оформить возврат</button>
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+</form>
+
+<script src="{% static 'js/return_form.js' %}"></script>
+
+</body>
+</html>

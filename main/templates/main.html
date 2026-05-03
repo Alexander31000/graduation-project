@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLib — Цифровая библиотека</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css'%}">
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <button class="burger-btn" id="burgerBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="logo">
+                <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
+                    SmartLib
+                </a>
+            </div>
+
+
+        <div class="header-center">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Поиск книг, авторов...">
+                <button><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+
+
+        <div class="dropdown">
+            <button class="nav-btn"><i class="fas fa-book"></i> <span>Жанры</span></button>
+            <div class="dropdown-content">
+                {% for genre in genres %}
+                    <a href="{% url 'genre_filter' genre.id %}">
+                        {{ genre }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+
+
+        <div class="header-right">
+            <a href="{% url 'main_page' %}" style="text: none; color: inherit;">
+                книги
+            </a>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'user_redactor' %}">Редактировать профиль</a>
+            <a href="{% url 'log_out' %}">Выйти</a>
+            <button class="nav-btn" title="Корзина"><i class="fas fa-shopping-basket"></i><span class="badge">0</span></button>
+            {% else%}
+            <a href="{% url 'login' %}">Войти</a>
+            {% endif %}
+        </div>
+
+
+    </header>
+
+    <!-- Боковое меню (Бургер) -->
+    <nav class="side-menu" id="sideMenu">
+        <ul>
+            <li><a href="{% url 'book_add' %}"><i class="fas fa-plus-circle"></i> Регистрация новой книги</a></li>
+            <li><a href="{% url 'client_add' %}"><i class="fas fa-user-plus"></i> Регистрация читателя</a></li>
+            <li><a href="{% url 'create_rent' %}"><i class="fas fa-hand-holding-book"></i> Выдача книг</a></li>
+            <li><a href="{% url 'return_books' %}"><i class="fas fa-undo"></i> Возврат книг</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+
+
+
+        {% for genre in genres %}
+            <a href="{% url 'genre_filter' genre.id %}">{{ genre.name }}</a>
+        {% endfor %}
+
+        <div class="book-grid" id="bookGrid">
+            {% for book in books %}
+            <div class="book-card">
+                <article>
+                    <h3 class="book-title">{{ book.title }}</h3>
+                    <img src="{{book.img.url}}" alt="{{ book.title }}" class="book-cover">
+                    <a href="{% url 'book_detail' book.id %}">Подробнее</a>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="{% static 'js/script.js'%}"></script>
+</body>
+</html>

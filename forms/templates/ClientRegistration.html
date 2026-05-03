@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="{% static 'css/client_add.css' %}">
+</head>
+<body>
+<div class="container">
+    <form method="POST" class="form">
+        {% csrf_token %}
+
+        <h2>Создать аккаунт</h2>
+
+        <div class="input-group">
+            <label>Имя пользователя</label>
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+
+        <div class="input-group">
+            <label>Пароль</label>
+            {{ form.password }}
+            {{ form.password.errors }}
+        </div>
+
+        <div class="input-group">
+            <label>Проверка пароля</label>
+            {{ form.password_protect }}
+            {{ form.password_protect.errors }}
+        </div>
+
+        <button type="submit" class="submit-btn">Зарегистрироваться</button>
+    </form>
+</div>
+<script src="{% static 'js/client_add'%}"></script>
+</body>
+</html>

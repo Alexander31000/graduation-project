@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить книгу | MyLibrary</title>
+    <!-- Подключаем Google Fonts и иконки -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <!-- Подключаем наш CSS -->
+    <link rel="stylesheet" href="{% static 'css/css_static_form.css' %}">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <div class="icon-box">
+                <i class="fas fa-book-medical"></i>
+            </div>
+            <h1>Новая книга</h1>
+            <p>Заполните данные для добавления в каталог</p>
+        </header>
+
+        <form method="post" enctype="multipart/form-data" id="bookForm" class="styled-form">
+            {% csrf_token %}
+            {{form.as_table}}
+            <button type="submit" class="btn btn-primary"
+                    style="display: block !important; background: blue; color: white;">Сохранить книгу
+            </button>
+            <a href="{% url 'main_page' %}" class="btn btn-secondary" style="display: block !important; color: red;">Отмена</a>
+
+
+            <!-- Превью изображения -->
+
+        </form>
+    </div>
+</div>
+
+<!-- Подключаем наш JS -->
+<script src="{% static 'js/js_static_form.js' %}"></script>
+</body>
+</html>

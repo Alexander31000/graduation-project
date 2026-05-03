@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование профиля</title>
+    <link rel="stylesheet" href="{% static 'css/redactor_user.css' %}">
+</head>
+<body>
+    <div class="edit-container">
+        <form method="POST" class="edit-form" id="updateForm">
+            {% csrf_token %}
+            <h2>Настройки профиля</h2>
+            <p class="subtitle">Вы можете изменить имя пользователя или установить новый пароль</p>
+
+            <div class="input-group">
+                <label for="id_username">Имя пользователя</label>
+                <input type="text" name="username" id="id_username"
+                       value="{{ form.username.value|default:'' }}"
+                       placeholder="Введите новое имя">
+            </div>
+
+            <div class="input-group">
+                <label for="id_password">Новый пароль</label>
+                <input type="password" name="password" id="id_password"
+                       placeholder="Оставьте пустым, если не хотите менять">
+                <small>Минимум 8 символов, если решите изменить</small>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="save-btn">Сохранить изменения</button>
+                <a href="{% url 'main_page' %}" class="cancel-link">Отмена</a>
+            </div>
+
+            {% if form.errors %}
+                <div class="error-summary">
+                    Пожалуйста, исправьте ошибки ниже.
+                </div>
+            {% endif %}
+        </form>
+    </div>
+    <script src="{% static 'js/redactor_user.js' %}"></script>
+</body>
+</html>
