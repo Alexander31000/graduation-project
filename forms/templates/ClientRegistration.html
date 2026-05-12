@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="{% static 'css/client_add.css' %}">
 </head>
 <body>
+<div class="logo">
+    <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
+        SmartLib
+    </a>
+</div>
 <div class="container">
     <form method="POST" class="form">
         {% csrf_token %}

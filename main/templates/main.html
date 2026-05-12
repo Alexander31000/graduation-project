@@ -45,20 +45,20 @@
         </div>
 
 
+{% comment %}
+<!--        <div class="header-right">-->
+<!--            <a href="{% url 'main_page' %}" style="text: none; color: inherit;">-->
+<!--                книги-->
+<!--            </a>-->
+<!--            {% if request.user.is_authenticated %}-->
+<!--            <a href="{% url 'user_redactor' %}">Редактировать профиль</a>-->
+<!--            <a href="{% url 'log_out' %}">Выйти</a>-->
 
-        <div class="header-right">
-            <a href="{% url 'main_page' %}" style="text: none; color: inherit;">
-                книги
-            </a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'user_redactor' %}">Редактировать профиль</a>
-            <a href="{% url 'log_out' %}">Выйти</a>
-            <button class="nav-btn" title="Корзина"><i class="fas fa-shopping-basket"></i><span class="badge">0</span></button>
-            {% else%}
-            <a href="{% url 'login' %}">Войти</a>
-            {% endif %}
-        </div>
-
+<!--            {% else%}-->
+<!--            <a href="{% url 'login' %}">Войти</a>-->
+<!--            {% endif %}-->
+<!--        </div>-->
+{% endcomment %}
 
     </header>
 
@@ -73,24 +73,56 @@
     </nav>
 
     <main class="container">
-
-
-
-        {% for genre in genres %}
-            <a href="{% url 'genre_filter' genre.id %}">{{ genre.name }}</a>
-        {% endfor %}
-
-        <div class="book-grid" id="bookGrid">
-            {% for book in books %}
-            <div class="book-card">
-                <article>
-                    <h3 class="book-title">{{ book.title }}</h3>
-                    <img src="{{book.img.url}}" alt="{{ book.title }}" class="book-cover">
-                    <a href="{% url 'book_detail' book.id %}">Подробнее</a>
-                </article>
-            </div>
+        <div class="genre-navigation" style="margin-bottom: 20px;">
+            {% for genre in genres %}
+                <a href="{% url 'genre_filter' genre.id %}" style="margin-right: 10px; text-decoration: none; color: #555;">{{ genre.name }}</a>
             {% endfor %}
         </div>
+
+        <!-- Вместо div используем table -->
+        <table class="book-table" style="width: 100%; border-collapse: collapse; background: white;">
+            <thead>
+                <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                    <th style="padding: 10px;">Обложка</th>
+                    <th style="padding: 10px;">Название</th>
+                    <th style="padding: 10px;">Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; width: 100px;">
+                        <!-- Ограничиваем размер картинки -->
+                        <img src="{{book.img.url}}" alt="{{ book.title }}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 4px; display: block;">
+                    </td>
+                    <td style="padding: 10px;">
+                        <h3 style="margin: 0; font-size: 16px; color: #333;">{{ book.title }}</h3>
+                    </td>
+                    <td style="padding: 10px;">
+                        <a href="{% url 'book_detail' book.id %}" class="btn-link" style="color: #007bff; text-decoration: none;">Подробнее</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+            <div class="pagination" style="margin-top: 20px; text-align: center;">
+                <span class="step-links">
+                    {% if books.has_previous %}
+                        <a href="?page=1">&laquo; Первая</a>
+                        <a href="?page={{ books.previous_page_number }}">Назад</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Страница {{ books.number }} из {{ books.paginator.num_pages }}
+                    </span>
+
+                    {% if books.has_next %}
+                        <a href="?page={{ books.next_page_number }}">Вперед</a>
+                        <a href="?page={{ books.paginator.num_pages }}">Последняя &raquo;</a>
+                    {% endif %}
+                </span>
+    </div>
+
     </main>
 
     <div class="overlay" id="overlay"></div>
@@ -98,3 +130,7 @@
     <script src="{% static 'js/script.js'%}"></script>
 </body>
 </html>
+
+
+
+

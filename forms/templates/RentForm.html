@@ -7,8 +7,21 @@
     <link rel="stylesheet" href="{% static 'css/rent_form.css' %}">
 </head>
 <body>
+    <div class="logo">
+        <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
+            SmartLib
+        </a>
+    </div>
     <div class="form-container">
         <h2>Оформление аренды книги</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form method="post" id="rent-form">
             {% csrf_token %}
 

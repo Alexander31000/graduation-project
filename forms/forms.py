@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from main.models import Book, Genre, Rent, BookCopy, Return
+from main.models import Book, Genre, Rent, BookCopy, Return, Client
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -23,6 +23,7 @@ class MultipleFileField(forms.FileField):
 
 
 class BookAddForm(forms.ModelForm):
+    copies_count = forms.IntegerField(min_value=1, label = 'Количество экземпляров')
     addit_imgs = MultipleFileField(required=False)
     class Meta:
         model = Book
@@ -36,10 +37,20 @@ class BookAddForm(forms.ModelForm):
 
 class ClientRegistrationForm(forms.Form):
 
-    username = forms.CharField(max_length=150)
-    password = forms.CharField(max_length=150, validators=[validate_password], widget = forms.PasswordInput)
-    password_protect = forms.CharField(max_length=150, widget = forms.PasswordInput)
-    register_date = forms.DateField(required=False)
+    # username = forms.CharField(max_length=150)
+    # password = forms.CharField(max_length=150, validators=[validate_password], widget = forms.PasswordInput)
+    # password_protect = forms.CharField(max_length=150, widget = forms.PasswordInput)
+    # register_date = forms.DateField(required=False)
+    class Meta:
+        model = Client
+
+        fields = [
+            'first_name',
+            'last_name',
+            'middle_name',
+            'email',
+            'birth_date',
+        ]
 
     def clean(self):
             cleaned_data = super().clean()
@@ -92,6 +103,9 @@ class RentForm(forms.ModelForm):
         model = Rent
         fields = ['client']
         # fields = ['client', 'planned_return_date']
+
+        def __str__(self):
+            return f"{self.book.title} (экз. #{self.id})"
 
 
 

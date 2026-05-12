@@ -5,9 +5,8 @@ from email.policy import default
 from django.contrib.auth.models import User
 from django.db import models
 
+
 # Create your models here.
-
-
 
 
 class Genre(models.Model):
@@ -15,33 +14,35 @@ class Genre(models.Model):
                     ('romance', 'роман'),
                     ('detective', 'детектив'),
                     ('adventure', 'приключения'),
-                    ('prose', 'проза'),]
+                    ('prose', 'проза'), ]
     genre_name = models.CharField(max_length=100, choices=genre_choice)
+
     def __str__(self):
         return self.genre_name
 
 
-
-
 class Book(models.Model):
     # хранит сущность книги
-    status_choice = [('available','доступна'),
+    status_choice = [('available', 'доступна'),
                      ('unavailable', 'недоступная')]
 
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    author = models.CharField(max_length=100)
-    daily_price = models.FloatField()
-    status = models.CharField(max_length=30, choices=status_choice)
-    img = models.ImageField(upload_to='images/')
-    genres = models.ManyToManyField(Genre, related_name='books')
+    title = models.CharField(max_length=100, verbose_name='Название книги')
+    description = models.TextField(verbose_name='Описание книги')
+    author = models.CharField(max_length=100, verbose_name='Автор произведения')
+    daily_price = models.FloatField(verbose_name='Цена за день использования, р.')
+    status = models.CharField(max_length=30, choices=status_choice, verbose_name='Статус: да/нет')
+    img = models.ImageField(upload_to='images/', verbose_name='Обложка')
+    genres = models.ManyToManyField(Genre, related_name='books', verbose_name='Жанры')
 
     def __str__(self):
         return self.title
+
     def total_copies(self):
         return self.copies.count()
+
     def available_copies(self):
         return self.copies.filter(status='available').count()
+
 
 class BookImages(models.Model):
     # доп картинки у книги
@@ -49,43 +50,50 @@ class BookImages(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
 
-
 class BookCopy(models.Model):
     # хранит экземпляры книги
     book = models.ForeignKey(Book, on_delete=models.PROTECT, related_name='copies')
     status = models.CharField(max_length=100, choices=[
-        ('available','доступна'),
+        ('available', 'доступна'),
         ('rented', 'нет свободных экземпляров'),
-        ('unavailable','недоступна'),])
+        ('unavailable', 'недоступна'), ])
 
     def __str__(self):
         return self.book.title
 
 
-
 class Client(models.Model):
     # клиент
-    register_date = models.DateField()
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name= 'Пользователь', null=False, blank=True)
+    first_name = models.CharField(max_length=100, verbose_name='Имя')
+    last_name = models.CharField(max_length=100, verbose_name='Фамилия')
+    middle_name = models.CharField(max_length=100, blank=True, verbose_name='Отчество')
+    # passport = models.CharField(
+    #     max_length=50,
+    #     unique=True,
+    #     blank=True,
+    #     null=True,
+    #     verbose_name='Паспорт'
+    # )
+    email = models.EmailField(unique=True, verbose_name='Email')
+    birth_date = models.DateField(verbose_name='Дата рождения')
+    register_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return self.user.username
-
-    class Meta:
-        verbose_name_plural = 'Клиенты'
-        verbose_name = 'Клиент'
-        ordering = ['-register_date']
+        return f"{self.last_name} {self.first_name}"
 
 
-
-
+class Meta:
+    verbose_name_plural = 'Клиенты'
+    verbose_name = 'Клиент'
+    ordering = ['-register_date']
 
 
 def default_time():
     return timezone.now() + timedelta(days=30)
 
+
 class Rent(models.Model):
-    client = models.ForeignKey(User, on_delete=models.PROTECT)
+    client = models.ForeignKey(Client, on_delete=models.PROTECT)
     start_date = models.DateField(default=timezone.now)
     planned_return_date = models.DateField(default=default_time)
     total_price = models.FloatField(default=0)
@@ -94,24 +102,14 @@ class Rent(models.Model):
     def __str__(self):
         return f"Выдача #{self.id} - {self.client}"
 
+
 class RentBookItem(models.Model):
     rental = models.ForeignKey(Rent, on_delete=models.CASCADE, related_name='items')
     book_copy = models.ForeignKey(BookCopy, on_delete=models.PROTECT)
     price_per_day = models.FloatField()
 
-
     def __str__(self):
         return f"{self.book_copy} (выдача {self.rental.id})"
-
-
-
-
-
-
-
-
-
-
 
 
 class Return(models.Model):
@@ -119,7 +117,6 @@ class Return(models.Model):
     return_date = models.DateField(auto_now_add=True)
     penalty = models.FloatField(default=0)
     total_price = models.FloatField(default=0)
-
 
     def __str__(self):
         return f"Возврат #{self.id}"
@@ -135,5 +132,3 @@ class ReturnItem(models.Model):
 
     def __str__(self):
         return f"{self.book_copy}"
-
-

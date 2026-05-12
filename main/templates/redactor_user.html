@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="{% static 'css/redactor_user.css' %}">
 </head>
 <body>
+    <div class="logo">
+        <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
+            SmartLib
+        </a>
+    </div>
     <div class="edit-container">
         <form method="POST" class="edit-form" id="updateForm">
             {% csrf_token %}

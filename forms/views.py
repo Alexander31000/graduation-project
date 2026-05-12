@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django.utils import timezone
 from django.contrib import messages
 
@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 
 from forms.forms import ClientRegistrationForm, BookAddForm, LoginForm, ChangeCredentionalForm, RentForm, ReturnForm
-from main.models import BookImages, Book, Client, Rent, RentBookItem, Return, ReturnItem
+from main.models import BookImages, Book, Client, Rent, RentBookItem, Return, ReturnItem, BookCopy
 from main.views import get_main_page
 
 
@@ -52,9 +52,15 @@ def book_create_form(request):
                 daily_price=book_add_form.cleaned_data['daily_price'],
                 img=book_add_form.cleaned_data['img'],
                 description=book_add_form.cleaned_data['description'],
-                genres=book_add_form.cleaned_data['genres'],
             )
             new_book.save()
+            copies_count = book_add_form.cleaned_data['copies_count']
+
+            for bok in range(copies_count):
+                BookCopy.objects.create(
+                    book=new_book,
+                    status='available'
+                )
             new_book.genres.set(book_add_form.cleaned_data['genres'])
 
 
@@ -83,19 +89,33 @@ def client_reg_form(request):
     if request.method == 'POST':
         form = ClientRegistrationForm(request.POST)
         if form.is_valid():
-            user = User(username=form.cleaned_data['username'])
-            password = form.cleaned_data['password']
-            if User.objects.filter(username=form.cleaned_data['username']):
-                form.add_error('username', 'Username already registered')
-            else:
-                user.set_password(password)
-                user.save()
-                Client.objects.create(user=user, register_date=date.today())
-                return redirect('main_page')
+            form.save()
 
-    context = {
-        'form': form,
-    }
+            messages.success(
+                request,
+                'Читатель успешно зарегистрирован'
+            )
+
+            return redirect('main_page')
+
+        return render(
+            request,
+            'ClientRegistration.html',
+            {'form': form}
+        )
+    #         user = User(username=form.cleaned_data['username'])
+    #         password = form.cleaned_data['password']
+    #         if User.objects.filter(username=form.cleaned_data['username']):
+    #             form.add_error('username', 'Username already registered')
+    #         else:
+    #             user.set_password(password)
+    #             user.save()
+    #             Client.objects.create(user=user, register_date=date.today())
+    #             return redirect('main_page')
+    #
+    # context = {
+    #     'form': form,
+    # }
 
     return render(request, 'ClientRegistration.html', context)
 
@@ -130,31 +150,32 @@ def log_out(request):
     return redirect('main_page')
 
 
-def redactor_user(request):
-    user = request.user
-    form = ChangeCredentionalForm(initial={"username": user.username,
-                                           "password": user.password, })
-
-    if request.method == 'POST':
-        form = ChangeCredentionalForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            if username != user.username:
-                user.username = username
-            if password != user.password:
-                user.set_password(password)
-            user.save()
-            return redirect('main_page')
-
-
-
-
-    context = {
-        'form': form
-    }
-
-    return render(request, 'redactor_user.html', context)
+# def redactor_user(request)\
+#     # по ТЗ уже лишнее
+#     user = request.user
+#     form = ChangeCredentionalForm(initial={"username": user.username,
+#                                            "password": user.password, })
+#
+#     if request.method == 'POST':
+#         form = ChangeCredentionalForm(request.POST)
+#         if form.is_valid():
+#             username = form.cleaned_data['username']
+#             password = form.cleaned_data['password']
+#             if username != user.username:
+#                 user.username = username
+#             if password != user.password:
+#                 user.set_password(password)
+#             user.save()
+#             return redirect('main_page')
+#
+#
+#
+#
+#     context = {
+#         'form': form
+#     }
+#
+#     return render(request, 'redactor_user.html', context)
 
 
 
@@ -215,6 +236,7 @@ def redactor_user(request):
 def create_rent(request):
     if request.method == 'POST':
         form = RentForm(request.POST)
+
         if form.is_valid():
             rent = form.save(commit=False)
             books = form.cleaned_data['books']
@@ -227,6 +249,8 @@ def create_rent(request):
             rent.save()
 
             total_sum = 0
+            book_titles = []
+
             for book_copy in books:
                 # Берем цену напрямую из модели Book
                 book_price = book_copy.book.daily_price
@@ -242,6 +266,7 @@ def create_rent(request):
 
                 # Просто суммируем цены книг
                 total_sum += book_price
+                book_titles.append(book_copy.book.title)
 
             # Применяем скидку к общей сумме
             if count > 4:
@@ -250,9 +275,13 @@ def create_rent(request):
                 total_sum *= 0.90  # -10%
 
             rent.total_price = total_sum
+            rent.planned_return_date = timezone.now().date() + timedelta(days=30)
             rent.save()
 
-            return redirect('main_page')
+            books_str = ", ".join(book_titles)
+            messages.success(request,f"Оформлена выдача. Книги: {books_str} р. (Вернуть: {rent.total_price} р.)")
+
+            return render(request, 'RentForm.html', {'form': form})
     else:
         form = RentForm()
     return render(request, 'RentForm.html', {'form': form})
@@ -308,6 +337,7 @@ def return_books(request):
         return_act.total_price += total_damage_penalty
         return_act.save()
 
+        messages.success(request, f"Книга: {return_act.total_price} успешна возвращена.)")
         messages.success(request, f"Успешно. К оплате: {return_act.total_price} р. (Штраф: {return_act.penalty} р.)")
         return redirect('return_books')
 

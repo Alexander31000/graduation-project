@@ -1,5 +1,4 @@
-
-
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -16,6 +15,11 @@ def get_main_page(request):
     books = Book.objects.all()
     genres = Genre.objects.all()
     # imgs = Book.objects.filter('img')
+    # Показывать по 10 книг на странице
+    paginator = Paginator(books, 10)
+
+    page_number = request.GET.get('page')
+    books = paginator.get_page(page_number)
 
     context = {'books': books,
                'genres': genres,
