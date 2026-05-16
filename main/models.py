@@ -10,15 +10,18 @@ from django.db import models
 
 
 class Genre(models.Model):
-    genre_choice = [('historical', 'историческое'),
-                    ('romance', 'роман'),
-                    ('detective', 'детектив'),
-                    ('adventure', 'приключения'),
-                    ('prose', 'проза'), ]
+    genre_choice = [
+        ('historical', 'историческое'),
+        ('romance', 'роман'),
+        ('detective', 'детектив'),
+        ('adventure', 'приключения'),
+        ('prose', 'проза'),
+    ]
+
     genre_name = models.CharField(max_length=100, choices=genre_choice)
 
     def __str__(self):
-        return self.genre_name
+        return self.get_genre_name_display()
 
 
 class Book(models.Model):

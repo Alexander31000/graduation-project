@@ -1,0 +1,109 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    padding: 30px;
+    color: #333;
+}
+
+.logo {
+    width: 100%;
+    padding: 20px;
+    background: #2c3e50;
+    margin-bottom: 30px;
+    border-radius: 12px;
+}
+
+.logo a {
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.page-title {
+    margin-bottom: 25px;
+    font-size: 32px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #34495e;
+}
+
+thead th {
+    padding: 18px;
+    text-align: left;
+}
+
+thead th a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+thead th a:hover {
+    color: #1abc9c;
+}
+
+tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: 0.2s;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+tbody td {
+    padding: 18px;
+    font-size: 15px;
+}
+
+.pagination {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination a {
+    padding: 10px 16px;
+    background: #34495e;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.pagination a:hover {
+    background: #1abc9c;
+}
+
+.pagination span {
+    font-weight: bold;
+}
+
+.empty-table {
+    text-align: center;
+    padding: 40px;
+    color: gray;
+}

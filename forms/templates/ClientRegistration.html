@@ -4,42 +4,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
+    <title>Регистрация читателя</title>
+
     <link rel="stylesheet" href="{% static 'css/client_add.css' %}">
 </head>
 <body>
+
 <div class="logo">
-    <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
+    <a href="{% url 'main_page' %}"
+       style="text-decoration: none; color: inherit;">
         SmartLib
     </a>
 </div>
+
 <div class="container">
+
     <form method="POST" class="form">
+
         {% csrf_token %}
 
-        <h2>Создать аккаунт</h2>
+        <h2>Регистрация читателя</h2>
 
         <div class="input-group">
-            <label>Имя пользователя</label>
-            {{ form.username }}
-            {{ form.username.errors }}
+            <label>Имя</label>
+            {{ form.first_name }}
+            {{ form.first_name.errors }}
         </div>
 
         <div class="input-group">
-            <label>Пароль</label>
-            {{ form.password }}
-            {{ form.password.errors }}
+            <label>Фамилия</label>
+            {{ form.last_name }}
+            {{ form.last_name.errors }}
         </div>
 
         <div class="input-group">
-            <label>Проверка пароля</label>
-            {{ form.password_protect }}
-            {{ form.password_protect.errors }}
+            <label>Отчество</label>
+            {{ form.middle_name }}
+            {{ form.middle_name.errors }}
+        </div>
+{% comment %}
+<!--        <div class="input-group">-->
+<!--            <label>Паспорт</label>-->
+<!--            {{ form.passport }}-->
+<!--            {{ form.passport.errors }}-->
+<!--        </div>-->
+{% endcomment %}
+        <div class="input-group">
+            <label>Email</label>
+            {{ form.email }}
+            {{ form.email.errors }}
         </div>
 
-        <button type="submit" class="submit-btn">Зарегистрироваться</button>
+        <div class="input-group">
+            <label>Дата рождения</label>
+            {{ form.birth_date }}
+            {{ form.birth_date.errors }}
+        </div>
+
+        <div class="input-group">
+            <label>Адрес проживания</label>
+            {{ form.address }}
+            {{ form.address.errors }}
+        </div>
+
+        <button type="submit" class="submit-btn">
+            Зарегистрировать читателя
+        </button>
+
     </form>
+
 </div>
-<script src="{% static 'js/client_add'%}"></script>
+
 </body>
 </html>

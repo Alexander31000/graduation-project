@@ -30,12 +30,21 @@
                 {{ form.client.label }} {{ form.client }}
             </div>
 
+            <div class="search-box">
+                <input type="text" id="book-search" placeholder="Поиск книги...">
+            </div>
+
             <!-- Выбор книг -->
             <div class="form-group">
                 <label>Выберите доступные книги:</label>
                 <div class="books-selection">
                     {{ form.books }}
                 </div>
+            </div>
+            <div class="selected-books">
+                <h3>Выбранные книги</h3>
+                    <ul id="selected-books-list">
+                    </ul>
             </div>
 
             <!-- Дата возврата -->

@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 
 from forms.forms import RedaktorBookForm, RedaktorBookImagesForm, BookImagesForm
-from main.models import Book, BookImages, Genre
+from main.models import Book, BookImages, Genre, Client
 
 
 # Create your views here.
@@ -27,6 +27,27 @@ def get_main_page(request):
                }
 
     return render(request, 'main.html', context)
+
+
+
+def client_list(request):
+
+    sort = request.GET.get('sort', 'last_name').strip()
+    clients = Client.objects.all().order_by(sort)
+    paginator = Paginator(clients, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'current_sort': sort
+    }
+
+    return render(
+        request,
+        'ClientList.html',
+        context
+    )
 
 
 def genre_filter(request, id):

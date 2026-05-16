@@ -113,9 +113,9 @@ def client_reg_form(request):
     #             Client.objects.create(user=user, register_date=date.today())
     #             return redirect('main_page')
     #
-    # context = {
-    #     'form': form,
-    # }
+    context = {
+        'form': form,
+    }
 
     return render(request, 'ClientRegistration.html', context)
 
@@ -238,8 +238,38 @@ def create_rent(request):
         form = RentForm(request.POST)
 
         if form.is_valid():
-            rent = form.save(commit=False)
+
+            client = form.cleaned_data['client']
             books = form.cleaned_data['books']
+            book_ids = []
+
+            for copy in books:
+
+                if copy.book.id in book_ids:
+                    form.add_error(
+                        'books',
+                        f'Нельзя выдавать несколько экземпляров книги "{copy.book.title}"'
+                    )
+
+                    return render(
+                        request,
+                        'RentForm.html',
+                        {'form': form}
+                    )
+
+                book_ids.append(copy.book.id)
+
+            active_rents = Rent.objects.filter(client=client, return_status=False)
+
+            if active_rents.exists():
+                form.add_error(
+                    'client',
+                    'У читателя есть невозвращенные книги'
+                )
+
+                return render(request, 'RentForm.html',{'form': form})
+
+            rent = form.save(commit=False)
             count = len(books)
 
             if count > 5:
@@ -265,7 +295,7 @@ def create_rent(request):
                 book_copy.save()
 
                 # Просто суммируем цены книг
-                total_sum += book_price
+                total_sum += book_price * 30
                 book_titles.append(book_copy.book.title)
 
             # Применяем скидку к общей сумме
@@ -279,7 +309,7 @@ def create_rent(request):
             rent.save()
 
             books_str = ", ".join(book_titles)
-            messages.success(request,f"Оформлена выдача. Книги: {books_str} р. (Вернуть: {rent.total_price} р.)")
+            messages.success(request,f""" Выдача оформлена. Книги:{books_str} Сумма: {rent.total_price} р. Вернуть до:{rent.planned_return_date}""")
 
             return render(request, 'RentForm.html', {'form': form})
     else:

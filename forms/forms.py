@@ -35,12 +35,8 @@ class BookAddForm(forms.ModelForm):
 #         model = Client
 #         fields = '__all__'
 
-class ClientRegistrationForm(forms.Form):
+class ClientRegistrationForm(forms.ModelForm):
 
-    # username = forms.CharField(max_length=150)
-    # password = forms.CharField(max_length=150, validators=[validate_password], widget = forms.PasswordInput)
-    # password_protect = forms.CharField(max_length=150, widget = forms.PasswordInput)
-    # register_date = forms.DateField(required=False)
     class Meta:
         model = Client
 
@@ -51,12 +47,6 @@ class ClientRegistrationForm(forms.Form):
             'email',
             'birth_date',
         ]
-
-    def clean(self):
-            cleaned_data = super().clean()
-            if cleaned_data.get('password') != cleaned_data.get('password_protect'):
-                self.add_error('password_protect', 'Пароли не совпадают')
-
 
 
 class LoginForm(forms.Form):

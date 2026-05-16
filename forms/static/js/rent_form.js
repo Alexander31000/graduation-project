@@ -22,5 +22,79 @@ document.addEventListener('DOMContentLoaded', function() {
 
     checkboxes.forEach(cb => {
         cb.addEventListener('change', updateSummary);
+
+
     });
 });
+
+const checkboxes = document.querySelectorAll(
+    'input[type="checkbox"]'
+);
+
+const selectedList = document.getElementById(
+    'selected-books-list'
+);
+
+const countSpan = document.getElementById(
+    'selected-count'
+);
+
+function updateSelectedBooks() {
+
+    selectedList.innerHTML = '';
+
+    let count = 0;
+
+    checkboxes.forEach(checkbox => {
+
+        if (checkbox.checked) {
+
+            count++;
+
+            const li = document.createElement('li');
+
+            const label = checkbox.parentElement.innerText;
+
+            li.textContent = label;
+
+            selectedList.appendChild(li);
+        }
+    });
+
+    countSpan.textContent = count;
+}
+
+checkboxes.forEach(checkbox => {
+
+    checkbox.addEventListener(
+        'change',
+        updateSelectedBooks
+    );
+
+});
+
+updateSelectedBooks();
+const searchInput = document.getElementById('book-search');
+
+searchInput.addEventListener('keyup', function () {
+
+    const searchValue = this.value.toLowerCase();
+
+    const labels = document.querySelectorAll(
+        '.books-selection label'
+    );
+
+    labels.forEach(label => {
+
+        const text = label.innerText.toLowerCase();
+
+        if (text.includes(searchValue)) {
+            label.style.display = 'block';
+        } else {
+            label.style.display = 'none';
+        }
+
+    });
+
+});
+
