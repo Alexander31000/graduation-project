@@ -1,4 +1,5 @@
 <!doctype html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +7,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/book_detail.css' %}">
 </head>
 <body>
     <div class="logo">
@@ -27,6 +29,23 @@
     <div class="button-group">
         <a href="{% url 'book_redaktor' book.id %}" class="cancel-link">Редактировать</a>
     </div>
+
+
+        <div class="popular-books">
+        <h3>Популярные книги</h3>
+
+        <div class="popular-books-list">
+            {% for book in popular_books %}
+                <div class="popular-book-item">
+                    <img src="{{ book.img.url }}" alt="{{ book.title }}">
+                    <p>{{ book.title }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+
 
 </body>
 </html>

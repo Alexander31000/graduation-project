@@ -4,6 +4,7 @@ from email.policy import default
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Avg
 
 
 # Create your models here.
@@ -37,6 +38,7 @@ class Book(models.Model):
     img = models.ImageField(upload_to='images/', verbose_name='Обложка')
     genres = models.ManyToManyField(Genre, related_name='books', verbose_name='Жанры')
 
+
     def __str__(self):
         return self.title
 
@@ -45,6 +47,21 @@ class Book(models.Model):
 
     def available_copies(self):
         return self.copies.filter(status='available').count()
+
+    @property
+    def average_rating(self):
+        return ReturnItem.objects.filter(
+            book_copy__book=self,
+            rating__isnull=False
+        ).aggregate(
+            avg_rating=Avg('rating')
+        )['avg_rating'] or 0
+
+    @property
+    def readers_count(self):
+        return ReturnItem.objects.filter(
+            book_copy__book=self
+        ).count()
 
 
 class BookImages(models.Model):
@@ -131,7 +148,17 @@ class ReturnItem(models.Model):
 
     damage = models.TextField(blank=True, null=True)
     pen = models.FloatField(default=0)
-    rating = models.IntegerField(blank=True, null=True)
+    rating = models.PositiveSmallIntegerField(
+        choices=[
+            (1, '1'),
+            (2, '2'),
+            (3, '3'),
+            (4, '4'),
+            (5, '5'),
+        ],
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return f"{self.book_copy}"

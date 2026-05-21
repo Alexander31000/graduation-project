@@ -66,9 +66,16 @@ def book_detail(request, id):
     book = Book.objects.get(id=id)
 
     additional_imgs = BookImages.objects.filter(book_id=id).select_related('book')
-
+    popular_books = Book.objects.all()
+    popular_books = sorted(
+        popular_books,
+        key=lambda book: book.readers_count,
+        reverse=True
+    )[:3]
     context = {'book': book,
-               'additional_imgs': additional_imgs, }
+               'additional_imgs': additional_imgs,
+               'popular_books': popular_books,
+               }
 
     return render(request, 'book_detail.html', context)
 
