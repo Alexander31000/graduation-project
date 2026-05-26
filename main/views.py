@@ -6,32 +6,44 @@ from django.urls import reverse_lazy
 from forms.forms import RedaktorBookForm, RedaktorBookImagesForm, BookImagesForm
 from main.models import Book, BookImages, Genre, Client
 
-
 # Create your views here.
 
 
 def get_main_page(request):
 
-    books = Book.objects.all()
+    sort = request.GET.get('sort', 'title')
+    direction = request.GET.get('direction', 'asc')
+
+    books = list(Book.objects.all())
+
+    # считаем поля вручную
+    for book in books:
+        book.total = book.copies.count()
+        book.available = book.copies.filter(status='available').count()
+    # сортировка
+    reverse = (direction == 'desc')
+    if sort == 'title':
+        books.sort(key=lambda x: x.title, reverse=reverse)
+    elif sort == 'year':
+        books.sort(key=lambda x: x.year, reverse=reverse)
+    elif sort == 'total':
+        books.sort(key=lambda x: x.total, reverse=reverse)
+    elif sort == 'available':
+        books.sort(key=lambda x: x.available, reverse=reverse)
     genres = Genre.objects.all()
-    # imgs = Book.objects.filter('img')
-    # Показывать по 10 книг на странице
     paginator = Paginator(books, 10)
-
     page_number = request.GET.get('page')
-    books = paginator.get_page(page_number)
+    page_obj = paginator.get_page(page_number)
 
-    context = {'books': books,
-               'genres': genres,
-               # 'imgs': imgs,
-               }
-
-    return render(request, 'main.html', context)
-
+    return render(request, 'main.html', {
+        'books': page_obj,
+        'genres': genres,
+        'current_sort': sort,
+        'direction': direction,
+    })
 
 
 def client_list(request):
-
     sort = request.GET.get('sort', 'last_name').strip()
     clients = Client.objects.all().order_by(sort)
     paginator = Paginator(clients, 5)
@@ -107,12 +119,12 @@ def redaktor_page(request, id):
                 if form_img.has_changed():
                     new_file = form_img.cleaned_data.get('img')
                     img_id = form_img.cleaned_data.get('id')
-                    if img_id: # Если картинка уже была в базе - обновляем
+                    if img_id:  # Если картинка уже была в базе - обновляем
                         instance = BookImages.objects.get(id=img_id)
                         if new_file:
                             instance.addit_imgs = new_file
                             instance.save()
-                        elif new_file: # Если это новое поле и в него загрузили файл
+                        elif new_file:  # Если это новое поле и в него загрузили файл
                             BookImages.objects.create(addit_imgs=new_file, book=book)
 
             # Массовое удаление помеченных картинок
@@ -123,8 +135,6 @@ def redaktor_page(request, id):
     else:
         form = RedaktorBookForm(instance=book)
         form_set = BookImagesForm(initial=initial_imgs)
-
-
 
     context = {
         'book': book,

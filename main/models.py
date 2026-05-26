@@ -37,6 +37,7 @@ class Book(models.Model):
     status = models.CharField(max_length=30, choices=status_choice, verbose_name='Статус: да/нет')
     img = models.ImageField(upload_to='images/', verbose_name='Обложка')
     genres = models.ManyToManyField(Genre, related_name='books', verbose_name='Жанры')
+    year =  models.DateField(verbose_name='Дата возврата книги', default=timezone.now, blank=False, null=False)
 
 
     def __str__(self):
@@ -51,7 +52,7 @@ class Book(models.Model):
     @property
     def average_rating(self):
         return ReturnItem.objects.filter(
-            book_copy__book=self,
+            rent_item__book_copy__book=self,
             rating__isnull=False
         ).aggregate(
             avg_rating=Avg('rating')
@@ -60,7 +61,7 @@ class Book(models.Model):
     @property
     def readers_count(self):
         return ReturnItem.objects.filter(
-            book_copy__book=self
+            rent_item__book_copy__book=self
         ).count()
 
 
@@ -125,6 +126,7 @@ class Rent(models.Model):
 
 class RentBookItem(models.Model):
     rental = models.ForeignKey(Rent, on_delete=models.CASCADE, related_name='items')
+    returned = models.BooleanField(default=False)
     book_copy = models.ForeignKey(BookCopy, on_delete=models.PROTECT)
     price_per_day = models.FloatField()
 
@@ -133,8 +135,8 @@ class RentBookItem(models.Model):
 
 
 class Return(models.Model):
-    rental = models.OneToOneField(Rent, on_delete=models.CASCADE)
-    return_date = models.DateField(auto_now_add=True)
+    rental = models.ForeignKey(Rent, on_delete=models.CASCADE,related_name='returns')
+    return_date = models.DateField(default=timezone.now)
     penalty = models.FloatField(default=0)
     total_price = models.FloatField(default=0)
 
@@ -144,10 +146,15 @@ class Return(models.Model):
 
 class ReturnItem(models.Model):
     return_act = models.ForeignKey(Return, on_delete=models.CASCADE, related_name='items')
-    book_copy = models.ForeignKey(BookCopy, on_delete=models.PROTECT)
+    rent_item = models.ForeignKey(RentBookItem, on_delete=models.PROTECT, null=True, blank=True)
 
     damage = models.TextField(blank=True, null=True)
-    pen = models.FloatField(default=0)
+    penalty = models.FloatField(default=0)
+    damage_photo = models.ImageField(
+        upload_to='damage_photos/',
+        null=True,
+        blank=True
+    )
     rating = models.PositiveSmallIntegerField(
         choices=[
             (1, '1'),
@@ -161,4 +168,4 @@ class ReturnItem(models.Model):
     )
 
     def __str__(self):
-        return f"{self.book_copy}"
+        return str(self.rent_item)

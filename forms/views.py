@@ -2,7 +2,6 @@ from datetime import date, timedelta
 from django.utils import timezone
 from django.contrib import messages
 
-
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -62,7 +61,6 @@ def book_create_form(request):
                     status='available'
                 )
             new_book.genres.set(book_add_form.cleaned_data['genres'])
-
 
             addit_imgs = book_add_form.cleaned_data['addit_imgs']
             if addit_imgs:
@@ -178,7 +176,6 @@ def log_out(request):
 #     return render(request, 'redactor_user.html', context)
 
 
-
 # def create_rent(request):
 #     form = RentForm()
 #     if request.method == 'POST':
@@ -267,7 +264,7 @@ def create_rent(request):
                     'У читателя есть невозвращенные книги'
                 )
 
-                return render(request, 'RentForm.html',{'form': form})
+                return render(request, 'RentForm.html', {'form': form})
 
             rent = form.save(commit=False)
             count = len(books)
@@ -309,7 +306,8 @@ def create_rent(request):
             rent.save()
 
             books_str = ", ".join(book_titles)
-            messages.success(request,f""" Выдача оформлена. Книги:{books_str} Сумма: {rent.total_price} р. Вернуть до:{rent.planned_return_date}""")
+            messages.success(request,
+                             f""" Выдача оформлена. Книги:{books_str} Сумма: {rent.total_price} р. Вернуть до:{rent.planned_return_date}""")
 
             return render(request, 'RentForm.html', {'form': form})
     else:
@@ -317,66 +315,119 @@ def create_rent(request):
     return render(request, 'RentForm.html', {'form': form})
 
 
-
-
-
-
 def return_books(request):
-    form = ReturnForm()
-    if request.method == 'POST':
-        rental_id = request.POST.get('rental')
-        rental = get_object_or_404(Rent, id=rental_id)
+    form = ReturnForm(request.POST or None)
+    rental_items = None
 
-        if Return.objects.filter(rental=rental).exists():
-            return redirect('main_page')
+    # Автоматические значения по умолчанию (если еще ничего не отправлено)
+    current_date = timezone.now().date()
+    calculated_price = 0
 
-        today = timezone.now().date()
-        delay_days = (today - rental.planned_return_date).days
-        delay_penalty = 0
-        if delay_days > 0:
-            # Штраф 1% в день от суммы аренды за просрочку
-            delay_penalty = rental.total_price * 0.01 * delay_days
+    # Получаем выбранную выдачу ОДИНАКОВО для GET и POST запросов, чтобы список книг не исчезал
+    rental_id = request.POST.get('rental') or request.GET.get('rental')
 
-        return_act = Return.objects.create(rental=rental, penalty=delay_penalty,total_price=rental.total_price + delay_penalty)
-        # возврат
-        total_damage_penalty = 0
-        for item in rental.items.all():
-            copy = item.book_copy
-            dmg_text = request.POST.get(f'damage_{copy.id}', '')
-            current_item_pen = 50 if dmg_text else 0
-            total_damage_penalty += current_item_pen
-            rating = request.POST.get(f'rating_{copy.id}')
+    if rental_id:
+        try:
+            rental = Rent.objects.get(id=rental_id)
+            rental_items = rental.items.filter(returned=False)
 
-            ReturnItem.objects.create(
-                return_act=return_act,
-                book_copy=copy,
-                damage=dmg_text,
-                pen=current_item_pen,
-                rating=rating
-            )
+            # --- Автоматический расчет стоимости по правилам ТЗ ---
+            today = timezone.now().date()
+            delay_days = (today - rental.planned_return_date).days
+            delay_penalty = 0
+            if delay_days > 0:
+                delay_penalty = rental.total_price * 0.01 * delay_days
 
-            # Освобождаем книгу
-            copy.status = 'available'
-            copy.save()
+            # Базовая стоимость за все книги в выдаче + штраф за просрочку
+            base_books_price = sum(item.price_per_day * 30 for item in rental_items)
+            calculated_price = base_books_price + delay_penalty
 
-            # Финализируем Rent и Return
-        rental.return_status = True
-        rental.save()
+        except Rent.DoesNotExist:
+            rental_id = None
 
-        return_act.penalty += total_damage_penalty
-        return_act.total_price += total_damage_penalty
-        return_act.save()
+    # Обработка сохранения АКТА (нажата кнопка Оформить возврат)
+    if request.method == 'POST' and 'save_return' in request.POST:
+        if form.is_valid():
+            rental = form.cleaned_data['rental']
+            selected_items = rental.items.filter(returned=False)
 
-        messages.success(request, f"Книга: {return_act.total_price} успешна возвращена.)")
-        messages.success(request, f"Успешно. К оплате: {return_act.total_price} р. (Штраф: {return_act.penalty} р.)")
-        return redirect('return_books')
+            if not selected_items.exists():
+                form.add_error(None, 'Нет книг для возврата по данной выдаче.')
 
-    else:
-        form = ReturnForm()
+            # Получаем дату и стоимость, которые ввел библиотекарь (выполнение ТЗ)
+            user_return_date = request.POST.get('return_date')
+            user_total_price = request.POST.get('total_cost')
 
-    context = {'form': form,
-               'message': messages.success}
+            if not user_return_date or not user_total_price:
+                form.add_error(None, 'Поля "Дата возврата" и "Стоимость" обязательны для заполнения!')
+
+            # --- Валидация по ТЗ: Если есть повреждение, ФОТО ОБЯЗАТЕЛЬНО ---
+            for item in selected_items:
+                damage = request.POST.get(f'damage_{item.id}', '').strip()
+                damage_photo = request.FILES.get(f'damage_photo_{item.id}')
+
+                if damage and not damage_photo:
+                    form.add_error(
+                        None,
+                        f'Для книги "{item.book_copy.book.title}" указаны повреждения, но не прикреплено обязательное фото!'
+                    )
+
+            # --- Если документ ПРОШЕЛ КОНТРОЛЬ (валидацию) — Сохраняем с данными из формы ---
+            if not form.errors:
+                # Создаем Акт Возврата с возможностью исправления полей библиотекарем
+                return_act = Return.objects.create(
+                    rental=rental,
+                    return_date=user_return_date,
+                    penalty=0,  # Оставляем для совместимости с вашей структурой
+                    total_price=user_total_price  # Берем цену, которую подтвердил библиотекарь
+                )
+
+                total_penalty = 0
+
+                for item in selected_items:
+                    copy = item.book_copy
+                    damage = request.POST.get(f'damage_{item.id}', '').strip()
+                    rating = request.POST.get(f'rating_{item.id}')
+                    damage_photo = request.FILES.get(f'damage_photo_{item.id}')
+
+                    item_penalty = 50 if damage else 0
+                    total_penalty += item_penalty
+
+                    # Создаем запись возвращенного экземпляра
+                    ReturnItem.objects.create(
+                        return_act=return_act,
+                        rent_item=item,
+                        damage=damage,
+                        damage_photo=damage_photo,
+                        penalty=item_penalty,
+                        rating=rating if rating else None
+                    )
+
+                    # Обновляем статусы книг
+                    copy.status = 'available'
+                    copy.save()
+
+                    item.returned = True
+                    item.save()
+
+                # Если все книги возвращены, закрываем всю выдачу
+                if not rental.items.filter(returned=False).exists():
+                    rental.return_status = True
+                    rental.save()
+
+                # Дописываем штраф в акт, если ведете отдельный учет
+                return_act.penalty = total_penalty
+                return_act.save()
+
+                messages.success(request, f'Возврат успешно оформлен! К оплате: {user_total_price} руб.')
+                return redirect('return_books')
+
+    # Контекст для рендеринга страницы (передает как текущие, так и измененные пользователем данные)
+    context = {
+        'form': form,
+        'rental_items': rental_items,
+        'current_date': request.POST.get('return_date') or current_date,
+        'calculated_cost': request.POST.get('total_cost') or calculated_price,
+    }
 
     return render(request, 'ReturnForm.html', context)
-
-

@@ -1,43 +1,326 @@
 <!DOCTYPE html>
 {% load static %}
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
     <title>Возврат книг</title>
+
     <link rel="stylesheet" href="{% static 'css/return_form.css' %}">
+
+    <style>
+
+        body{
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header{
+            background: #1f2937;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        .logo a{
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .container{
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        h2{
+            margin-top: 0;
+        }
+
+        .form-group{
+            margin-bottom: 20px;
+        }
+
+        label{
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select,
+        input,
+        textarea{
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        textarea{
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .book-card{
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        .book-title{
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .book-info{
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .submit-btn{
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover{
+            background: #15803d;
+        }
+
+        .errors{
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .success{
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #166534;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .act-block{
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+    </style>
+
 </head>
 <body>
-<div class="logo">
-    <a href="{% url 'main_page' %}" style="text-decoration: none; color: inherit;">
-        SmartLib
-    </a>
-</div>
 
-<h2>Возврат книг</h2>
+<header class="header">
+    <div class="logo">
+        <a href="{% url 'main_page' %}">
+            SmartLib
+        </a>
+    </div>
+</header>
 
-{% if error %}
-  <p style="color:red;">{{ error }}</p>
-{% endif %}
+<div class="container">
 
-<form method="post">
-    {% csrf_token %}
+    <h2>Оформление акта возврата книг</h2>
 
-    <label>Вернуть в библиотеку:</label>
-    {{ form.rental }}
-
-    <label>Рейтинг:</label>
-    <input type="number" name="rating_{{ book.id }}" min="1" max="5">
-
-    <button type="submit">Оформить возврат</button>
+    <!-- сообщения -->
     {% if messages %}
-    {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
-</form>
+        {% for message in messages %}
+            <div class="success">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-<script src="{% static 'js/return_form.js' %}"></script>
+    <!-- ошибки -->
+    {% if form.errors %}
+        <div class="errors">
+
+            <strong>Обнаружены ошибки:</strong>
+
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <!-- выбор выдачи -->
+
+        <div class="form-group">
+
+            <label for="id_rental">
+                Выберите выдачу
+            </label>
+
+            {{ form.rental }}
+
+        </div>
+
+        <!-- информация по возврату -->
+
+        <div class="act-block">
+
+            <div class="form-group">
+
+                <label>
+                    Дата возврата
+                </label>
+
+                <input
+                        type="date"
+                        name="return_date"
+                        value="{{ current_date|date:'Y-m-d' }}"
+                        required
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    Итоговая стоимость / штраф
+                </label>
+
+                <input
+                        type="number"
+                        step="0.01"
+                        name="total_cost"
+                        value="{{ calculated_cost }}"
+                        required
+                >
+
+            </div>
+
+        </div>
+
+        <!-- список книг -->
+
+        {% if rental_items %}
+
+            <h3>
+                Книги для возврата
+            </h3>
+
+            {% for item in rental_items %}
+
+                <div class="book-card">
+
+                    <div class="book-title">
+                        {{ item.book_copy.book.title }}
+                    </div>
+
+                    <div class="book-info">
+
+                        Автор:
+                        {{ item.book_copy.book.author }}
+
+                        <br>
+
+                        Экземпляр ID:
+                        {{ item.book_copy.id }}
+
+                    </div>
+
+                    <!-- рейтинг -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Рейтинг книги
+                        </label>
+
+                        <select name="rating_{{ item.id }}">
+
+                            <option value="">
+                                Без оценки
+                            </option>
+
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- повреждения -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Обнаруженные повреждения
+                        </label>
+
+                        <textarea
+                                name="damage_{{ item.id }}"
+                                placeholder="Опишите повреждения книги..."
+                        ></textarea>
+
+                    </div>
+
+                    <!-- фото -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Фото повреждений
+                        </label>
+
+                        <input
+                                type="file"
+                                name="damage_photo_{{ item.id }}"
+                                accept="image/*"
+                        >
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+            <button
+                    type="submit"
+                    name="save_return"
+                    value="1"
+                    class="submit-btn"
+            >
+                Оформить возврат
+            </button>
+
+        {% endif %}
+
+    </form>
+
+</div>
 
 </body>
 </html>

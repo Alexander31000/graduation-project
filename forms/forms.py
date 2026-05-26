@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
+from django.utils import timezone
 
 from main.models import Book, Genre, Rent, BookCopy, Return, Client
 
@@ -104,8 +105,30 @@ class RentForm(forms.ModelForm):
 class ReturnForm(forms.Form):
     rental = forms.ModelChoiceField(
         queryset=Rent.objects.filter(return_status=False),
+        empty_label="--------- Выберите выдачу ---------",
         label="Выберите выдачу"
     )
-    class Meta:
-        model = Return
-        fields = '__all__'
+
+    # Добавляем поле даты с автоподстановкой сегодняшнего дня
+    return_date = forms.DateField(
+        initial=timezone.now,
+        label="Дата возврата",
+        widget=forms.DateInput(attrs={'type': 'date'})  # Сделает удобный календарь в браузере
+    )
+
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.fields['rental'].widget.attrs.update({
+            'id': 'id_rental',
+            'onchange': 'this.form.submit();'
+        })
+
+        self.fields['rental'].label_from_instance = (
+            lambda obj:
+            f"{obj.client.last_name} "
+            f"{obj.client.first_name} "
+            f"(выдача #{obj.id})"
+        )
